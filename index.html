@@ -216,6 +216,38 @@ main.inner {
     padding-top: 100px; /* 큐카드가 배너 하단에 걸쳐 있으므로 본문을 아래로 밀어줌 */
 }
 
+@media (max-width: 768px){
+
+    body{
+        min-width: auto;
+    }
+
+    .inner{
+        width:100%;
+        padding:0 15px;
+    }
+
+    .game-row{
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .channel-layout{
+        grid-template-columns: 1fr;
+    }
+
+    .mobile-grid{
+        grid-template-columns: 1fr;
+    }
+
+    .banner-container{
+        height: 320px;
+    }
+
+    .nav-container{
+        flex-wrap: wrap;
+    }
+}
+
 </style>
 </head>
 <body>
