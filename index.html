@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>한게임 - 대한민국 대표 게임 포털</title>
+<style>
+    /* 기본 초기화 */
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Malgun Gothic','맑은 고딕',sans-serif;background:#fff;color:#333;min-width:1200px;line-height:1.5;}
+    li{list-style:none;}
+    a{text-decoration:none;color:inherit;}
+    .inner { width: 1080px; margin: 0 auto; position: relative; }
+
+    /* ================= 1. 헤더 & 상단 메뉴 ================= */
+    .header { background: #1c1c1c; height: 65px; border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 1000; }
+    .nav-container { display: flex; align-items: center; height: 100%; padding: 0 10px; }
+    .logo { font-size: 26px; font-weight: 900; color: #ff6600; margin-right: 30px; cursor: pointer; letter-spacing: -1px; }
+    
+    .main-nav { display: flex; height: 100%; align-items: center; }
+    .nav-item { position: relative; height: 65px; display: flex; align-items: center; padding: 0 18px; color: #fff; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.2s; }
+    .nav-item:hover { color: #ff6600; }
+    .nav-item.active { background: #000; color: #ff6600; }
+
+    /* 메뉴 클릭 시 열리는 팝업 패널 공통 */
+     .sub-panel {
+
+        display: none; position: absolute; top: 65px; left: 0; background: #fff;
+
+        border-radius: 0 0 15px 15px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+
+        z-index: 2000; border: 1px solid #ddd; border-top: none;
+
+    }
+
+    .sub-panel.show { display: block;   opacity: 1;
+
+    transform: translateY(0); }
+
+    /* 전체게임용 대형 패널 스타일 */
+    #pop-all { width: 800px; left: 0; }
+    .all-game-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px; }
+    .all-game-col h4 { font-size: 15px; border-bottom: 2px solid #ff6600; padding-bottom: 5px; margin-bottom: 10px; color: #000; }
+    .all-game-col ul li { font-size: 13px; padding: 4px 0; color: #666; cursor: pointer; }
+    .all-game-col ul li:hover { color: #ff6600; text-decoration: underline; }
+
+    /* 일반 메뉴 패널 스타일 */
+    .panel-grid { display: flex; gap: 20px; text-align: center; }
+    .panel-game img { width: 75px; height: 75px; border-radius: 12px; display: block; margin-bottom: 8px; /* 아래 글자와의 간격 */ background:#f0f0f0; object-fit: cover; object-position: center; margin: 0 auto;}
+    .panel-game p { font-size: 13px; color: #333; font-weight: bold; white-space: nowrap; }
+
+    /* ================= 2. 슬라이드 배너 ================= */
+    .banner-container { width: 100%; height: 700px; overflow: visible; position: relative; z-index:10; }
+    .banner-wrapper { display: flex; width: 100%; height: 100%; transition: transform 0.5s ease-in-out; overflow:visible; object-position: center top; object-fit: cover; }
+    .banner-slide { flex: 0 0 100%; height: 100%; position: relative; object-position: top center; object-fit: cover;}
+    .banner-slide img { width: 100%; height: 100%; object-fit: cover; object-position: top cemter; object-fit: cover;}
+    .banner-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.1); display: flex; align-items: center; }
+    .banner-overlay h2 { font-size: 42px; font-weight: 900; color: #fff; text-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
+    .slide-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.3); color: #fff; border: none; font-size: 24px; padding: 10px 15px; cursor: pointer; z-index: 10; border-radius: 5px; }
+    .prev-btn { left: 30px; } .next-btn { right: 30px; }
+
+    /* ================= 3. 메인 섹션 ================= */
+    main { padding: 60px 0; }
+    .section-container { margin-bottom: 70px; }
+    .section-title { font-size: 22px; font-weight: bold; margin-bottom: 25px; border-left: 5px solid #ff6600; padding-left: 15px; }
+    
+    .game-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 15px; }
+/* 1. 카드의 전체 틀 - 형태 유지 */
+.big-card { 
+    height: 230px; 
+    border-radius: 12px; 
+    overflow: hidden; /* 이미지가 둥근 모서리 밖으로 나가는 것 방지 */
+    position: relative; 
+    padding: 0;      /* 내부 여백 제거 */
+    background: #eee; /* 이미지 로딩 전 기본 배경색 */
+}
+
+/* 2. 카드 내부 이미지 - 잘리지 않게 최적화 */
+.big-card .card-img {
+    width: 100%;
+    height: 100%;
+    /* cover: 꽉 채우기(비율유지, 약간 잘릴 수 있음) 
+       contain: 전체 다 보이기(비율유지, 여백 생길 수 있음) */
+    object-fit: cover; 
+    display: block;
+}
+
+/* 3. 불필요한 요소 제거 (글자가 없으므로 그림자/오버레이 삭제) */
+.big-card h3,
+.big-card::after {
+    display: none;
+}
+
+/* 4. 개별 카드 색상 (선택 사항) */
+.big-card.poker { background: #2c3e50; }
+.big-card.gostop { background: #3ab0ff; }
+.big-card.board { background: #00c2ff; }
+
+/* 1. 카드 컨테이너 수정 */
+.small-card { 
+    position: relative; 
+    width: 100%;        /* 부모 요소(game-row)의 너비에 맞게 조정 */
+    height: 150px;      /* 높이를 명시적으로 지정해야 이미지가 보입니다 */
+    background: #eee;   /* 이미지 로딩 전 배경색 */
+    border-radius: 12px; 
+    overflow: hidden; 
+}
+
+/* 2. 이미지 박스 - 카드 전체를 채우도록 설정 */
+.small-card .img-box { 
+    width: 100%; 
+    height: 100%; 
+}
+
+/* 3. 이미지 태그 - 중요! 경로 확인 필수 */
+.small-card .img-box img { 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover;  /* 비율 유지하며 꽉 채우기 */
+    display: block;
+}
+
+/* 4. 이미지 위에 겹칠 텍스트(info) */
+.small-card .info { 
+    position: absolute; 
+    bottom: 0; 
+    left: 0; 
+    width: 100%; 
+    padding: 10px 0; 
+    background: rgba(0, 0, 0, 0.6); /* 글자가 잘 보이게 반투명 배경 추가 */
+    color: #fff; 
+    font-weight: bold;
+    text-align: center;
+    z-index: 10;
+}
+    .channel-layout { display: grid; grid-template-columns: 2fr 1.1fr; gap: 20px; }
+    .v-big, .v-small { border-radius: 15px; overflow: hidden; background: #000; }
+    .v-big { height: 400px; }
+    .v-side { display: flex; flex-direction: column; gap: 20px; }
+    .v-small { height: 190px; }
+
+    .mobile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .mobile-card { display: flex; align-items: center; padding: 25px; background: #fff; border: 1px solid #e5e5e5; border-radius: 15px; }
+    .m-icon { width: 75px; height: 75px; border-radius: 18px; margin-right: 20px; overflow: hidden; }
+    .m-icon img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* ================= 4. 푸터 ================= */
+    .footer { background: #f5f5f5; padding: 50px 0; border-top: 1px solid #ddd; color: #666; font-size: 13px; }
+    .footer-links { margin-bottom: 25px; display: flex; gap: 20px; font-weight: bold; color: #333; flex-wrap: wrap; }
+    .footer-links a:nth-child(3) { color: #000; text-decoration: underline; }
+    .footer-notice { background: #ececec; padding: 15px; border-radius: 5px; margin-bottom: 25px; line-height: 1.6; }
+    .footer-info { line-height: 1.8; }
+
+    /* 중간 프로모션 배너 스타일 */
+.mid-promo-banner {
+    width: 100%;
+    height: 120px; /* 배너 높이는 이미지에 맞춰 조절하세요 */
+    overflow: hidden;
+    border-radius: 15px;
+    background-color: #f0f0f0; /* 이미지 로딩 전 배경색 */
+    transition: transform 0.3s ease;
+}
+
+.mid-promo-banner:hover {
+    transform: translateY(-3px); /* 마우스 올렸을 때 살짝 들리는 효과 */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.mid-promo-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 이미지가 영역에 꽉 차게 설정 */
+}
+.mid-full-banner {
+    width: 100%;       /* 화면 가로 꽉 채우기 */
+    height: 200px;     /* 원하는 높이 설정 */
+    margin: 50px 0;    /* 위아래 섹션과의 간격 */
+    overflow: hidden;
+}
+
+.mid-full-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 이미지가 가로로 길게 늘어나도 비율 유지 */
+    display: block;
+}
+
+/* 1. 전체게임 마우스 올릴 때 주황색으로 변경 */
+.nav-item[data-target="all"]:hover {
+    color: #ff6600 !important;
+}
+
+/* 2. 배너 컨테이너 설정 (카드가 잘리지 않게 하려면 overflow: hidden을 해제하거나 높이를 충분히 줘야 함) */
+.banner-container .inner {
+    width: 1200px;      /* 실제 가로 콘텐츠 폭 */
+    height: 100%;
+    margin: 0 auto;
+    position: relative;
+    pointer-events: none; /* 배경 클릭 방해 방지 */
+}
+/* 3. 배너 하단 카드 묶음 (위치 교정) */
+
+.card-layout-box {
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 1200px !important; /* 실제 컨텐츠 너비 */
+    height: 0 !important; /* 높이를 0으로 해서 카드 위치의 기준점만 잡음 */
+    overflow: visible !important;
+}
+
+
+
+main.inner {
+    padding-top: 100px; /* 큐카드가 배너 하단에 걸쳐 있으므로 본문을 아래로 밀어줌 */
+}
+
+</style>
+</head>
+<body>
+
+<header class="header">
+    <div class="inner nav-container">
+        <div class="logo">HANGAME</div>
+        <nav class="main-nav">
+            <div class="nav-item" data-target="all">전체게임 ▼</div>
+            <div class="nav-item" data-target="poker">포커</div>
+            <div class="nav-item" data-target="gostop">고스톱</div>
+            <div class="nav-item" data-target="board">보드</div>
+            <div class="nav-item" data-target="gamezone">게임존</div>
+            <div class="sub-panel" id="pop-all">
+                <div class="all-game-grid">
+                    <div class="all-game-col"><h4>포커</h4><ul><li>7포커</li><li>로우바둑이</li><li>하이로우</li><li>홀덤</li></ul></div>
+                    <div class="all-game-col"><h4>고스톱</h4><ul><li>신맞고</li><li>맞고</li><li>고스톱</li><li>섯다</li></ul></div>
+                    <div class="all-game-col"><h4>보드</h4><ul><li>바둑·오목</li><li>장기</li><li>사천성</li><li>신윷놀이</li></ul></div>
+                    <div class="all-game-col"><h4>캐주얼/RPG</h4><ul><li>한게임 섯다</li><li>모바일 게임</li><li>채널링 게임</li></ul></div>
+                </div>
+            </div>
+
+            <div class="sub-panel" id="pop-poker" style="left: 110px;">
+                <div class="panel-grid">
+                    <div class="panel-game"><img src="img/poker0.jpg"><p>7포커</p></div>
+                    <div class="panel-game"><img src="img/casino.png"><p>한게임 카지노</p></div>
+                </div>
+            </div>
+
+            <div class="sub-panel" id="pop-gostop" style="left: 180px;">
+                <div class="panel-grid">
+                    <div class="panel-game"><img src="img/gostop1.jpg"><p>신맞고</p></div>
+                    <div class="panel-game"><img src="img/gostop4.jpg"><p>섯다</p></div>
+                </div>
+            </div>
+
+            <div class="sub-panel" id="pop-board" style="left: 250px;">
+                <div class="panel-grid">
+                    <div class="panel-game"><img src="img/badukomo.jpg"><p>바둑·오목</p></div>
+                    <div class="panel-game"><img src="img/janggi.jpg"><p>장기</p></div>
+                    <div class="panel-game"><img src="img/sachungsung.jpg"><p>사천성</p></div>
+                    <div class="panel-game"><img src="img/yutnori.jpg"><p>신윷놀이</p></div>
+                </div>
+            </div>
+
+              <div class="sub-panel" id="pop-gamezone" style="left: 320px;">
+                <div class="panel-grid">
+                    <div class="panel-game"><img src="img/zonebanner1.jpg"><p>테일즈러너</p></div>
+                    <div class="panel-game"><img src="img/zonebanner2.jpg"><p>마구마구</p></div>
+                    <div class="panel-game"><img src="img/zonebanner3.jpg"><p>다키스트데이즈</p></div>
+
+                </div>
+            </div>
+        </nav>
+    </div>
+</header>
+
+<section class="banner-container">
+    <div class="banner-wrapper">
+        <div class="banner-slide"><img src="img/banner1.png"></div>
+        <div class="banner-slide"><img src="img/banner2.png"></div>
+    </div>
+
+    <button class="slide-btn prev-btn">&lt;</button>
+    <button class="slide-btn next-btn">&gt;</button>
+</section>
+
+<main class="inner">
+    <section class="section-container">
+        <div class="section-title">포커 </div>
+        <div class="game-row">
+            <div class="big-card gostop">
+            <img src="img/poker0.jpg" alt="한게임 고스톱 로고" class="card-img"></div>
+            <div class="small-card"><div class="img-box"><img src="img/poker1.jpg"></div><div class="info">7포커</div></div>
+            <div class="small-card"><div class="img-box"><img src="img/poker2.jpg"></div><div class="info">로우바둑이</div></div>
+            <div class="small-card"><div class="img-box"><img src="img/poker3.jpg"></div><div class="info">하이로우</div></div>
+            <div class="small-card"><div class="img-box"><img src="img/poker4.jpg"></div><div class="info">홀덤</div></div>
+        </div>
+    </section>
+
+    <section class="section-container">
+        <div class="section-title">고스톱 </div>
+        <div class="game-row">
+            <div class="big-card gostop"> <img src="img/gostop0.jpg" alt="한게임 고스톱 로고" class="card-img"></div>
+            <div class="small-card"><div class="img-box"><img src="img/gostop1.jpg"></div><div class="info">신맞고</div></div>
+            <div class="small-card"><div class="img-box"><img src="img/gostop2.jpg"></div><div class="info">맞고</div></div>
+            <div class="small-card"><div class="img-box"><img src="img/gostop3.jpg"></div><div class="info">고스톱</div></div>
+            <div class="small-card"><div class="img-box"><img src="img/gostop4.jpg"></div><div class="info">섯다</div></div>
+        </div>
+    </section>
+
+    <section class="section-container">
+        <div class="section-title">바둑·오목·장기·보드</div>
+        <div class="game-row">
+             <div class="big-card gostop"> <img src="img/bo1.png" alt="바둑.오목.장기.보드 로고" class="card-img"></div>
+            <div class="small-card"><div class="img-box"><img src="img/badukomo.jpg"></div><div class="info">바둑·오목</div></div>
+            <div class="small-card"><div class="img-box"><img src="img/janggi.jpg"></div><div class="info">장기</div></div>
+            <div class="small-card"><div class="img-box"><img src="img/sachungsung.jpg"></div><div class="info">사천성</div></div>
+            <div class="small-card"><div class="img-box"><img src="img/yutnori.jpg"></div><div class="info">신윷놀이</div></div>
+        </div>
+    </section>
+    
+    <section class="section-container">
+    <div class="mid-promo-banner">
+        <a href="#">
+            <img src="img/banner3.png" alt="중간 배너" style="width:100%; border-radius:15px; display:block;">
+        </a>
+    </div>
+    </section>
+   
+    <section class="section-container">
+     <div class="section-title"><img src="img/gamezone.jpg" ></div>
+     <div class="game-row">
+          <div class="big-card gostop"> <img src="img/gamezone0.jpg" alt="게임존배너" class="card-img"></div>
+         <div class="small-card"><div class="img-box"><img src="img/gamezone1.jpg"></div><div class="info">정사<br>치명적  넘는 RPG</div></div>
+         <div class="small-card"><div class="img-box"><img src="img/gamezone2.jpg"></div><div class="info">로드 판타지<br>가장 자극적인 전장</div></div>
+         <div class="small-card"><div class="img-box"><img src="img/gamezone3.jpg"></div><div class="info">사천성<br>절대방치 KING되다.</div></div>
+         <div class="small-card"><div class="img-box"><img src="img/gamezone4.jpg"></div><div class="info">조조의 꿈<br>GRAND OPEN</div>
+     </div>
+    </section>
+    </main>
+
+<main class="inner">
+    <section class="section-container">
+        <div class="section-title">채널 한게임 </div>
+        <div class="channel-layout">
+            <div class="v-big"><iframe width="100%" height="100%" src="https://www.youtube.com/embed/w9mthUd7_ZQ" frameborder="0" allowfullscreen></iframe></div>
+            <div class="v-side">
+                <div class="v-small"><iframe width="100%" height="100%" src="https://www.youtube.com/embed/GVPUYhrp6V8" frameborder="0"></iframe></div>
+                <div class="v-small"><iframe width="100%" height="100%" src="https://www.youtube.com/embed/ZnEqOVmDtyY" frameborder="0"></iframe></div>
+            </div>
+        </div>
+    </section>
+
+
+    <section class="section-container">
+        <div class="section-title">모바일 게임 </div>
+        <div class="mobile-grid">
+        <div class="mobile-card"><div class="m-icon"><img src="img/pic1.png"></div><div class="m-text"><h3>어비스디아<br>수집형 액션RPG</h3></div></div>
+        <div class="mobile-card"><div class="m-icon"><img src="img/pic2.png"></div><div class="m-text"><h3>다키스트</h3>슈팅RPG</div></div>
+        <div class="mobile-card"><div class="m-icon"><img src="img/pic3.png"></div><div class="m-text"><h3>우파루 오딧세이 컬렉션<br>SNG</h3></div></div>
+        <div class="mobile-card"><div class="m-icon"><img src="img/pic4.png"></div><div class="m-text"><h3>한게임 포커<br>카드 </h3></div></div>
+        <div class="mobile-card"><div class="m-icon"><img src="img/pic5.png"></div><div class="m-text"><h3>한게임포커 클래식<br>카지노</h3></div></div>
+        <div class="mobile-card"><div class="m-icon"><img src="img/pic6.png"></div><div class="m-text"><h3>한게임 신맞고<br>카드</h3></div></div>
+    </div>
+     
+    </section>
+</main>
+
+<footer class="footer">
+    <div class="inner">
+        <div class="footer-links">
+            <a href="#">회사소개</a><a href="#">이용약관</a><a href="#">개인정보처리방침</a><a href="#">청소년보호정책</a>
+            <a href="#">이메일 무단수집거부</a><a href="#">제휴안내</a><a href="#">고객센터</a><a href="#">사이트맵</a>
+        </div>
+        <div class="footer-notice">엔에이치엔은 한게임 내 채널링 게임 및 스폰서 충전소 영역의 통신판매를 중개하고 있습니다...</div>
+        <div class="footer-info">상호 : <b>엔에이치엔(주)</b> &nbsp; 대표 : <b>정우진</b> &nbsp; 주소 : 성남시 분당구 대왕판교로 645번길 16 &nbsp; 고객센터 : 1588-3810</div>
+        <div class="copyright">© NHN Corp. All Rights Reserved.</div>
+    </div>
+</footer>
+
+<script>
+    // 메뉴 제어 스크립트
+    const navItems = document.querySelectorAll('.nav-item');
+    const subPanels = document.querySelectorAll('.sub-panel');
+
+    navItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const targetId = `pop-${item.getAttribute('data-target')}`;
+            const targetPanel = document.getElementById(targetId);
+            
+            subPanels.forEach(p => { if(p !== targetPanel) p.classList.remove('show'); });
+            navItems.forEach(i => { if(i !== item) i.classList.remove('active'); });
+
+            targetPanel.classList.toggle('show');
+            item.classList.toggle('active');
+        });
+    });
+
+    document.addEventListener('click', () => {
+        subPanels.forEach(p => p.classList.remove('show'));
+        navItems.forEach(i => i.classList.remove('active'));
+    });
+
+    // 배너 제어 스크립트
+    const wrapper = document.querySelector('.banner-wrapper');
+    let currentIdx = 0;
+    setInterval(() => {
+        currentIdx = (currentIdx + 1) % 2; // 2개일 때 기준
+        wrapper.style.transform = `translateX(-${currentIdx * 100}%)`;
+    }, 4000);
+</script>
+
+</body>
+</html>
